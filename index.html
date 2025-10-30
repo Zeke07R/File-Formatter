@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Renamer Gallery with Multi-Earshot Drag & Drop</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+
+<h2>File Renamer Gallery with Multi-Earshot Drag & Drop</h2>
+
+<form id="fileForm" class="form-container">
+  <label>
+    <input type="checkbox" id="butterflyEdge"/> Butterfly Edge
+  </label>
+  <br><br>
+
+  <h3>Fabric Name</h3>
+  <input type="text" id="FabricName" required>
+
+  <h3>Front</h3>
+  <div id="frontGallery" class="file-gallery">Drag & drop Front image here or click to select</div>
+  <input type="file" id="frontPic" accept="image/*" style="display:none;">
+
+  <h3>Side</h3>
+  <div id="sideGallery" class="file-gallery">Drag & drop Side image here or click to select</div>
+  <input type="file" id="sidePic" accept="image/*" style="display:none;">
+
+  <h3>Earshot Files</h3>
+  <div id="earshotContainer" class="earshotContainer"></div>
+  <button type="button" id="addEarshotBtn">Add Earshot File</button>
+
+  <br><br>
+  <button type="submit">Rename & Download ZIP</button>
+  <button type="button" id="clearBtn">Clear All</button>
+</form>
+
+<script src="index.js"></script>
+
+</body>
+</html>
