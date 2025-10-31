@@ -2,7 +2,7 @@ let models = {};
 
 // Base URL for your GitHub Pages site
 // Replace USERNAME and REPO with your GitHub username and repo name
-const BASE_URL = "https://zeke07r.github.io/File-Formatter/Models/";
+const BASE_URL = "https://zeke07r.github.io/File-Formatter/models/";
 
 export async function loadModel(name = "pillows") {
   if (!models[name]) {
