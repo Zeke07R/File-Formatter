@@ -1,15 +1,18 @@
+import { classifyImage } from './aimodel.js'; // Your AI model function
+
 const form = document.getElementById('fileForm');
 const butterflyEdge = document.getElementById('butterflyEdge');
-const earshotContainer = document.getElementById('earshotContainer');
-const addEarshotBtn = document.getElementById('addEarshotBtn');
 const fabricInput = document.getElementById('FabricName');
-
 const frontGallery = document.getElementById('frontGallery');
 const sideGallery = document.getElementById('sideGallery');
-const frontInput = document.getElementById('frontPic');
-const sideInput = document.getElementById('sidePic');
+const smartGallery = document.getElementById('smartGallery');
+const smartInput = document.getElementById('smartInput');
+const earshotContainer = document.getElementById('earshotContainer');
 
-function createFileCard(file, filenamePreview, removeCallback) {
+const earshotEntries = [];
+
+// --- File card creation ---
+function createFileCard(file, filenamePreview) {
   const card = document.createElement('div');
   card.className = 'file-card';
   const img = document.createElement('img');
@@ -21,61 +24,47 @@ function createFileCard(file, filenamePreview, removeCallback) {
   caption.className = 'preview';
   caption.textContent = filenamePreview;
 
-  const removeBtn = document.createElement('button');
-  removeBtn.type = 'button';
-  removeBtn.textContent = 'Remove';
-  removeBtn.className = 'removeBtn';
-  removeBtn.addEventListener('click', () => {
-    removeCallback();
-    card.remove();
-  });
-
-  card.appendChild(img);
-  card.appendChild(caption);
-  card.appendChild(removeBtn);
+  card.append(img, caption);
   return card;
 }
 
-function setupGallery(input, gallery, suffix) {
+// --- Gallery handler ---
+function createGalleryHandler(gallery, suffix) {
   let fileData = null;
+  const previewDiv = document.createElement('div');
+  previewDiv.className = 'preview';
+  gallery.innerHTML = '';
+  gallery.appendChild(previewDiv);
 
-  function updateGallery(file) {
+  const updateGallery = file => {
     gallery.innerHTML = '';
+    gallery.appendChild(previewDiv);
+
     if (!file) {
-      gallery.textContent = `Drag & drop ${suffix} image here or click to select`;
+      previewDiv.textContent = `No ${suffix} image`;
       return;
     }
-    const fabricNameVal = fabricInput.value.trim().replace(/\s+/g,'');
+
+    const fabricNameVal = fabricInput.value.trim().replace(/\s+/g, '');
     const flange = butterflyEdge.checked ? 'Flange' : '';
     const previewName = fabricNameVal ? `${fabricNameVal}${suffix}${flange}` : file.name;
-    gallery.appendChild(createFileCard(file, previewName, () => fileData = null));
+
+    gallery.appendChild(createFileCard(file, previewName));
+    previewDiv.textContent = `Preview: ${previewName}`;
     fileData = file;
-  }
+  };
 
-  gallery.addEventListener('click', () => input.click());
-  ['dragover','dragenter'].forEach(evt => gallery.addEventListener(evt, e => { e.preventDefault(); gallery.classList.add('dragover'); }));
-  ['dragleave','drop'].forEach(evt => gallery.addEventListener(evt, e => { e.preventDefault(); gallery.classList.remove('dragover'); }));
-  gallery.addEventListener('drop', e => {
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) updateGallery(file);
-  });
+  fabricInput.addEventListener('input', () => { if(fileData) updateGallery(fileData); });
+  butterflyEdge.addEventListener('change', () => { if(fileData) updateGallery(fileData); });
 
-  input.addEventListener('change', () => {
-    if (input.files[0]) updateGallery(input.files[0]);
-  });
-
-  fabricInput.addEventListener('input', () => { if (fileData) updateGallery(fileData); });
-  butterflyEdge.addEventListener('change', () => { if (fileData) updateGallery(fileData); });
-
-  return () => fileData;
+  return { set: updateGallery, get: () => fileData };
 }
 
-// Setup Front and Side galleries
-const getFrontFile = setupGallery(frontInput, frontGallery, 'Front');
-const getSideFile = setupGallery(sideInput, sideGallery, 'Side');
+const frontHandler = createGalleryHandler(frontGallery, 'Front');
+const sideHandler = createGalleryHandler(sideGallery, 'Side');
 
-// Earshot entry
-function addEarshotEntry(file=null) {
+// --- Earshot entry ---
+function addEarshotEntry(file = null) {
   const div = document.createElement('div');
   div.className = 'earshot-entry';
 
@@ -83,25 +72,22 @@ function addEarshotEntry(file=null) {
   removeBtn.type = 'button';
   removeBtn.textContent = 'Remove';
   removeBtn.className = 'removeBtn';
-  removeBtn.addEventListener('click', () => div.remove());
+  removeBtn.addEventListener('click', () => {
+    div.remove();
+    const index = earshotEntries.indexOf(entry);
+    if (index > -1) earshotEntries.splice(index, 1);
+  });
 
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*';
-  fileInput.required = true;
-  fileInput.className = 'earPic';
-
-  // Wrap reverse input for show/hide
-  const reverseContainer = document.createElement('div');
+  // --- Reverse Colorway input ---
   const reverseInput = document.createElement('input');
   reverseInput.type = 'text';
   reverseInput.placeholder = 'Reverse Colorway (optional)';
   reverseInput.className = 'reverseColorway';
-  reverseContainer.appendChild(reverseInput);
-  reverseContainer.style.display = butterflyEdge.checked ? 'block' : 'none';
+  reverseInput.style.display = butterflyEdge.checked ? 'block' : 'none'; // hide initially if not checked
 
+  // Toggle display when checkbox changes
   butterflyEdge.addEventListener('change', () => {
-    reverseContainer.style.display = butterflyEdge.checked ? 'block' : 'none';
+    reverseInput.style.display = butterflyEdge.checked ? 'block' : 'none';
     if (!butterflyEdge.checked) reverseInput.value = '';
     updatePreview();
   });
@@ -113,6 +99,8 @@ function addEarshotEntry(file=null) {
   thumb.className = 'thumbnail';
   thumb.style.display = 'none';
 
+  let storedFile = file || null;
+
   const updatePreview = () => {
     const fabricNameVal = fabricInput.value.trim().replace(/\s+/g,'');
     const flange = butterflyEdge.checked ? 'Flange' : '';
@@ -122,82 +110,98 @@ function addEarshotEntry(file=null) {
     previewDiv.textContent = name ? `Preview: ${name}` : '';
   };
 
-  function setFile(f) {
-    const dt = new DataTransfer();
-    dt.items.add(f);
-    fileInput.files = dt.files;
-    thumb.src = URL.createObjectURL(f);
+  if (file) {
+    thumb.src = URL.createObjectURL(file);
     thumb.style.display = 'block';
     updatePreview();
   }
-  if (file) setFile(file);
 
-  // Drag & Drop multi Earshot
-  div.addEventListener('dragover', e => { e.preventDefault(); div.style.borderColor = '#66f'; });
-  div.addEventListener('dragleave', e => { e.preventDefault(); div.style.borderColor = '#ccc'; });
-  div.addEventListener('drop', e => {
-    e.preventDefault();
-    div.style.borderColor = '#ccc';
-    Array.from(e.dataTransfer.files).forEach(f => {
-      if (f.type.startsWith('image/')) addEarshotEntry(f);
-    });
-    div.remove();
-  });
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) {
-      thumb.src = URL.createObjectURL(fileInput.files[0]);
+  const entry = {
+    div,
+    thumb,
+    reverseInput,
+    getFile: () => storedFile,
+    setFile: f => {
+      storedFile = f;
+      thumb.src = URL.createObjectURL(f);
       thumb.style.display = 'block';
-    } else thumb.style.display = 'none';
-    updatePreview();
-  });
+      updatePreview();
+    }
+  };
 
+  // Live preview updates
   fabricInput.addEventListener('input', updatePreview);
   reverseInput.addEventListener('input', updatePreview);
 
-  div.appendChild(removeBtn);
-  div.appendChild(fileInput);
-  div.appendChild(reverseContainer);
-  div.appendChild(previewDiv);
-  div.appendChild(thumb);
-
+  div.append(removeBtn, reverseInput, previewDiv, thumb);
   earshotContainer.appendChild(div);
+  earshotEntries.push(entry);
+
+  return entry;
 }
 
-// Initial Earshot entry
+// Initial empty Earshot entry
 addEarshotEntry();
-addEarshotBtn.addEventListener('click', addEarshotEntry);
 
-// Clear All
+// --- Smart Drop Zone ---
+smartGallery.addEventListener('click', () => smartInput.click());
+smartGallery.addEventListener('dragover', e => { e.preventDefault(); smartGallery.classList.add('dragover'); });
+smartGallery.addEventListener('dragleave', e => { e.preventDefault(); smartGallery.classList.remove('dragover'); });
+smartGallery.addEventListener('drop', async e => {
+  e.preventDefault();
+  smartGallery.classList.remove('dragover');
+  handleFiles(Array.from(e.dataTransfer.files));
+});
+
+smartInput.addEventListener('change', () => handleFiles(Array.from(smartInput.files)));
+
+async function handleFiles(files) {
+  smartGallery.textContent = 'Processing images...';
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+
+    const { angle } = await classifyImage('pillows', file);
+
+    if (angle === 'Front') frontHandler.set(file);
+    else if (angle === 'Side') sideHandler.set(file);
+    else {
+      const entry = addEarshotEntry();
+      entry.setFile(file);
+    }
+  }
+  smartGallery.textContent = 'Drop all images here — AI will auto-sort Front/Side/Top';
+}
+
+// --- Clear all ---
 document.getElementById('clearBtn').addEventListener('click', () => {
   form.reset();
-  frontGallery.innerHTML = `Drag & drop Front image here or click to select`;
-  sideGallery.innerHTML = `Drag & drop Side image here or click to select`;
+  frontGallery.innerHTML = 'No Front image';
+  sideGallery.innerHTML = 'No Side image';
   earshotContainer.innerHTML = '';
+  earshotEntries.length = 0;
   addEarshotEntry();
 });
 
-// Submit
+// --- Submit (ZIP) ---
 form.addEventListener('submit', async e => {
   e.preventDefault();
   const fabricName = fabricInput.value.trim().replace(/\s+/g,'');
-  const isButterfly = butterflyEdge.checked;
-  const flangeSuffix = isButterfly ? 'Flange' : '';
+  const flangeSuffix = butterflyEdge.checked ? 'Flange' : '';
+  const frontPic = frontHandler.get();
+  const sidePic = sideHandler.get();
 
-  const frontPic = getFrontFile();
-  const sidePic = getSideFile();
   if (!fabricName || !frontPic) { alert("Fabric Name and Front image required!"); return; }
 
   const zip = new JSZip();
   zip.file(`${fabricName}Front${flangeSuffix}.${frontPic.name.split('.').pop()}`, frontPic);
   if (sidePic) zip.file(`${fabricName}Side${flangeSuffix}.${sidePic.name.split('.').pop()}`, sidePic);
 
-  document.querySelectorAll('.earshot-entry').forEach(entry => {
-    const file = entry.querySelector('.earPic').files[0];
-    const reverse = entry.querySelector('.reverseColorway').value.trim().replace(/\s+/g,'');
+  earshotEntries.forEach(entry => {
+    const file = entry.getFile();
     if (!file) return;
     let name = `${fabricName}Top${flangeSuffix}`;
-    if (isButterfly && reverse) name += reverse;
+    const reverse = entry.reverseInput.value.trim().replace(/\s+/g,'');
+    if (reverse) name += reverse;
     zip.file(`${name}.${file.name.split('.').pop()}`, file);
   });
 

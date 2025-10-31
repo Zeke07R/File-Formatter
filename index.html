@@ -3,41 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>File Renamer Gallery with Multi-Earshot Drag & Drop</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<title>Fabric AI Renamer</title>
 <link rel="stylesheet" href="stylesheet.css">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="module" src="index.js" defer></script>
 </head>
 <body>
 
-<h2>File Renamer Gallery with Multi-Earshot Drag & Drop</h2>
+<h2>Fabric AI Renamer (Single AI Drop)</h2>
 
 <form id="fileForm" class="form-container">
   <label>
     <input type="checkbox" id="butterflyEdge"/> Butterfly Edge
   </label>
-  <br><br>
 
   <h3>Fabric Name</h3>
   <input type="text" id="FabricName" required>
 
+  <h3>AI Drop Zone</h3>
+  <div id="smartGallery" class="file-gallery">
+    Drop images here — AI will auto-sort Front/Side/Top
+    <input type="file" id="smartInput" accept="image/*" multiple>
+  </div>
+
   <h3>Front</h3>
-  <div id="frontGallery" class="file-gallery">Drag & drop Front image here or click to select</div>
-  <input type="file" id="frontPic" accept="image/*" style="display:none;">
+  <div id="frontGallery" class="file-gallery">No Front image</div>
 
   <h3>Side</h3>
-  <div id="sideGallery" class="file-gallery">Drag & drop Side image here or click to select</div>
-  <input type="file" id="sidePic" accept="image/*" style="display:none;">
+  <div id="sideGallery" class="file-gallery">No Side image</div>
 
   <h3>Earshot Files</h3>
   <div id="earshotContainer" class="earshotContainer"></div>
-  <button type="button" id="addEarshotBtn">Add Earshot File</button>
 
-  <br><br>
+  <br>
   <button type="submit">Rename & Download ZIP</button>
   <button type="button" id="clearBtn">Clear All</button>
 </form>
-
-<script src="index.js"></script>
 
 </body>
 </html>
