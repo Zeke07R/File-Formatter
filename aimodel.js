@@ -1,10 +1,10 @@
 // aimodel.js
 let models = {};
 
-export async function loadModel(name = "pillows") {
+export async function loadModel(name = "Pillows") {
   if (!models[name]) {
     // ✅ Use absolute URL for GitHub Pages
-    const basePath = `https://zeke07r.github.io/File-Formatter/models/${name}/`;
+    const basePath = `https://zeke07r.github.io/File-Formatter/Models/${name}/`;
     models[name] = await tmImage.load(basePath + "model.json", basePath + "metadata.json");
     console.log(`✅ Loaded model: ${name}`);
   }
