@@ -1,21 +1,11 @@
+// aiModel.js
 let models = {};
-
-// Base URL for your GitHub Pages site
-// Replace USERNAME and REPO with your GitHub username and repo name
-const BASE_URL = "https://zeke07r.github.io/File-Formatter/models/";
 
 export async function loadModel(name = "pillows") {
   if (!models[name]) {
-    const modelPath = `${BASE_URL}${name}/model.json`;
-    const metadataPath = `${BASE_URL}${name}/metadata.json`;
-
-    try {
-      models[name] = await tmImage.load(modelPath, metadataPath);
-      console.log(`✅ Loaded model: ${name}`);
-    } catch (err) {
-      console.error(`❌ Failed to load model '${name}'`, err);
-      throw err;
-    }
+    const basePath = `models/${name}/`;
+    models[name] = await tmImage.load(basePath + "model.json", basePath + "metadata.json");
+    console.log(`✅ Loaded model: ${name}`);
   }
   return models[name];
 }
